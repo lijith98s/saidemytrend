@@ -26,11 +26,11 @@ pipeline {                                    // 1  // Defines the start of the 
 
         stage('SonarQube analysis') {         // 8  // Creates a stage named 'SonarQube analysis'
             environment {                     // 9  // Defines environment variables specific to this stage
-                scannerHome = tool 'lijith-sonar-scanner'   // Sets the SonarQube scanner tool
+                scannerHome = tool 'saidemy-sonar-scanner'   // Sets the SonarQube scanner tool
             }                                 // 9  // Ends the environment block for this stage
 
             steps {                           // 10 // Defines the steps that will be executed in this stage
-                withSonarQubeEnv('lijith-sonarqube-server') {       // Executes the SonarQube analysis within the environment
+                withSonarQubeEnv('saidemy-sonarqube-server') {       // Executes the SonarQube analysis within the environment
                     sh "${scannerHome}/bin/sonar-scanner"           // Runs the SonarQube scanner tool
                 }                             // Ends the withSonarQubeEnv block
             }                                 // 10 // Ends the steps block for 'SonarQube analysis' stage
@@ -40,5 +40,16 @@ pipeline {                                    // 1  // Defines the start of the 
             steps {                           // 12 // Defines the steps that will be executed in this stage
                 script {                      // 13 // Allows running custom Groovy script inside the pipeline
                     timeout(time: 1, unit: 'HOURS') {  // Sets a timeout of 1 hour for the quality gate check
-                        def qg = waitForQualityGate()
+                        def qg = waitForQualityGate()  // Waits for the quality gate result from SonarQube
+                        if (qg.status != 'OK') {       // Checks if the quality gate status is not OK
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"  // Aborts if the gate fails
+                        }
+                    }
+                }                             // 13 // Ends the script block for the Quality Gate stage
+            }                                 // 12 // Ends the steps block for 'Quality Gate' stage
+        }                                     // 11 // Ends the 'Quality Gate' stage
+
+    }                                         // 3  // Ends the stages block
+
+}                                             // 1  // Ends the pipeline block
 
